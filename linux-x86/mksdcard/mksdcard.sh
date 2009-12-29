@@ -54,13 +54,13 @@ total_size=`sfdisk -s ${node}`
 total_size=`expr ${total_size} / 1024`
 rom_size=`expr ${BOOT_ROM_SIZE} + ${SYSTEM_ROM_SIZE} + ${DATA_SIZE}`
 rom_size=`expr ${rom_size} + ${CACHE_SIZE} + ${RECOVERY_ROM_SIZE}`
-vfat_size=`expr ${total_size} - ${rom_size}`
-system_start=`expr ${BOOT_ROM_SIZE} + ${vfat_size}`
-extend_start=`expr ${system_start} + ${SYSTEM_ROM_SIZE}`
-extend_size=`expr ${DATA_SIZE} + ${CACHE_SIZE}`
-recovery_start=`expr ${extend_start} + ${extend_size}`
-data_start=`expr ${extend_start}`
-cache_start=`expr ${data_start} + ${DATA_SIZE}`
+vfat_size=`expr ${total_size} - ${rom_size} - 20`
+system_start=`expr ${BOOT_ROM_SIZE} + ${vfat_size} + 1`
+extend_start=`expr ${system_start} + ${SYSTEM_ROM_SIZE} + 1`
+extend_size=`expr ${DATA_SIZE} + ${CACHE_SIZE} + 8`
+recovery_start=`expr ${extend_start} + ${extend_size} + 1`
+data_start=`expr ${extend_start} + 1`
+cache_start=`expr ${data_start} + ${DATA_SIZE} + 3`
 
 # create partitions
 if [ "${cal_only}" -eq "1" ]; then
@@ -88,8 +88,8 @@ ${cache_start},${CACHE_SIZE},83
 EOF
 
 # format the SDCARD/DATA/CACHE partition
-echo ${node} | grep mmcblk > /dev/null
 part=""
+echo ${node} | grep mmcblk > /dev/null
 if [ "$?" -eq "0" ]; then
 	part="p"
 fi
