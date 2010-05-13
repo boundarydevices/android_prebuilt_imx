@@ -54,7 +54,8 @@ total_size=`sfdisk -s ${node}`
 total_size=`expr ${total_size} / 1024`
 rom_size=`expr ${BOOT_ROM_SIZE} + ${SYSTEM_ROM_SIZE} + ${DATA_SIZE}`
 rom_size=`expr ${rom_size} + ${CACHE_SIZE} + ${RECOVERY_ROM_SIZE}`
-vfat_size=`expr ${total_size} - ${rom_size} - 20`
+bvfat_size=`expr ${total_size} - ${rom_size} - 20 `
+vfat_size=`expr ${total_size} - ${rom_size} - 20 - 20 `
 system_start=`expr ${BOOT_ROM_SIZE} + ${vfat_size} + 1`
 extend_start=`expr ${system_start} + ${SYSTEM_ROM_SIZE} + 1`
 extend_size=`expr ${DATA_SIZE} + ${CACHE_SIZE} + 8`
@@ -79,12 +80,16 @@ dd if=/dev/zero of=${node} bs=1024 count=1
 
 
 sfdisk --force -uM ${node} << EOF
-${BOOT_ROM_SIZE},${vfat_size},b
-${system_start},${SYSTEM_ROM_SIZE},83
-${extend_start},${extend_size},5
-${recovery_start},${RECOVERY_ROM_SIZE},83
-${data_start},${DATA_SIZE},83
-${cache_start},${CACHE_SIZE},83
+,${bvfat_size},b
+,${SYSTEM_ROM_SIZE},83
+,${extend_size},5
+,${RECOVERY_ROM_SIZE},83
+,${DATA_SIZE},83
+,${CACHE_SIZE},83
+EOF
+
+sfdisk --force -uM ${node} -N1 << EOF
+8,${vfat_size},b
 EOF
 
 # format the SDCARD/DATA/CACHE partition
