@@ -8,24 +8,19 @@ DATA_SIZE=1024
 CACHE_SIZE=256
 RECOVERY_ROM_SIZE=8
 VENDER_SIZE=8
-MISC_SIZE=4
+MISC_SIZE=8
 
 help() {
 
 bn=`basename $0`
 cat << EOF
-This script can help you partition and make file system for you
-sdcard,emmc block device. 
-
-You can also flush android image with -f parameter.
-
 usage $bn <option> device_node
 
 options:
   -h				displays this help message
   -s				only get partition size
-  -nf 				not format file system. 
-  -f 				flash android image, will flash all android image in your directory.
+  -np 				not partition.
+  -f 				flash android image.
 EOF
 
 }
@@ -66,26 +61,27 @@ fi
 
 # call sfdisk to create partition table
 # get total card size
+seprate=40
 total_size=`sfdisk -s ${node}`
 total_size=`expr ${total_size} / 1024`
 rom_size=`expr ${BOOT_ROM_SIZE} + ${SYSTEM_ROM_SIZE} + ${DATA_SIZE}`
-rom_size=`expr ${rom_size} + ${CACHE_SIZE} + ${RECOVERY_ROM_SIZE} + ${MISC_SIZE} + ${VENDER_SIZE} `
+rom_size=`expr ${rom_size} + ${CACHE_SIZE} + ${RECOVERY_ROM_SIZE} + ${MISC_SIZE} + ${VENDER_SIZE} + ${seprate}`
 boot_start=`expr ${BOOTLOAD_RESERVE}`
 boot_rom_sizeb=`expr ${BOOT_ROM_SIZE} + ${BOOTLOAD_RESERVE}`
 recovery_start=`expr ${boot_start} + ${BOOT_ROM_SIZE} + 1`
 extend_start=`expr ${recovery_start} + 1`
-extend_size=`expr ${SYSTEM_ROM_SIZE} + ${DATA_SIZE} + ${CACHE_SIZE} + ${VENDER_SIZE} + ${MISC_SIZE} + 15`
+extend_size=`expr ${SYSTEM_ROM_SIZE} + ${DATA_SIZE} + ${CACHE_SIZE} + ${VENDER_SIZE} + ${MISC_SIZE} + ${seprate}`
 system_start=`expr ${extend_start} + 1`
 cache_start=`expr ${extend_start} + ${SYSTEM_ROM_SIZE} + 1`
 data_start=`expr ${cache_start} + ${CACHE_SIZE} + 1`
 misc_start=`expr ${data_start} + ${DATA_SIZE}`
 vfat_start=`expr ${extend_start} + ${extend_size}`
-vfat_size=`expr ${total_size} - ${rom_size} - 35`
+vfat_size=`expr ${total_size} - ${rom_size}`
 
 # create partitions
 if [ "${cal_only}" -eq "1" ]; then
 cat << EOF
-BOOT   : ${BOOT_ROM_SIZE}MB
+BOOT   : ${boot_rom_sizeb}MB
 RECOVERY: ${RECOVERY_ROM_SIZE}MB
 SYSTEM : ${SYSTEM_ROM_SIZE}MB
 CACHE  : ${CACHE_SIZE}MB
